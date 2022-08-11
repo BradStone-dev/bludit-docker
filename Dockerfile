@@ -1,7 +1,7 @@
 FROM centos:centos7
 
 ENV bludit_content /usr/share/nginx/html/bl-content
-ENV bludit_url https://www.bludit.com/releases/bludit-3-13-1.zip
+ENV bludit_url https://github.com/bludit/bludit/archive/refs/tags/4.0.0-rc-3.zip
 
 ENV nginx_path /etc/nginx
 ENV nginx_conf ${nginx_path}/nginx.conf
@@ -25,7 +25,8 @@ RUN sed -i -e "s/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm.sock/g" ${
 	sed -i -e "s/;listen.owner = nobody/listen.owner = nginx/g" ${fpm_pool} && \
 	sed -i -e "s/;listen.group = nobody/listen.group = nginx/g" ${fpm_pool} && \
 	sed -i -e "s/user = apache/user = nginx/g" ${fpm_pool} && \
-	sed -i -e "s/group = apache/group = nginx/g" ${fpm_pool}
+	sed -i -e "s/group = apache/group = nginx/g" ${fpm_pool} && \
+	sed -i -e "s|/var/opt/rh/rh-php72/lib/php/session|/usr/share/nginx/html/bl-content/tmp|g" ${fpm_pool}
 
 RUN echo "daemon off;" >> ${nginx_conf}
 
@@ -44,6 +45,7 @@ RUN ln -sf /dev/stderr /var/log/nginx/error.log
 COPY conf/default.conf ${nginx_path}/conf.d/default.conf
 COPY conf/nginx.conf ${nginx_conf}
 COPY conf/supervisord.conf /etc/supervisord.conf
+COPY bludit.zip /tmp/bludit.zip
 
 # Nginx logs to Docker log collector
 RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
@@ -51,10 +53,11 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
 
 # Bludit installation
 WORKDIR /tmp
-RUN curl -o /tmp/bludit.zip ${bludit_url} && \
-	unzip /tmp/bludit.zip && \
+RUN	curl -o /tmp/bludit.zip ${bludit_url} && \
+    unzip /tmp/bludit.zip && \
 	rm -rf /usr/share/nginx/html && \
 	mv bludit-* /usr/share/nginx/html && \
+        mkdir ${bludit_content} && \
 	chown -R nginx:nginx /usr/share/nginx/html && \
 	chmod 755 ${bludit_content} && \
 	sed -i "s/'DEBUG_MODE', FALSE/'DEBUG_MODE', TRUE/g" /usr/share/nginx/html/bl-kernel/boot/init.php && \

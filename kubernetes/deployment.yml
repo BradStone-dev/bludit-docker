@@ -6,7 +6,7 @@ metadata:
   labels:
     app: bludit
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: bludit
@@ -17,7 +17,16 @@ spec:
     spec:
       containers:
       - name: bludit
-        image: bludit:latest
+        image: reason997/bludit-4:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
+        volumeMounts:
+        - name: data
+          mountPath: /usr/share/nginx/html/bl-content
+      imagePullSecrets:
+      - name: regcred
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: fileshare

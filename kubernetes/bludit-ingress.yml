@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bludit-ingress
+  namespace: default
+  labels:
+    name: bluditingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: brad-stone.ru
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: bludit-nodeport
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - brad-stone.ru
+    secretName: brad-stone-ru-secret
